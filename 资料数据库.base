@@ -1,0 +1,18 @@
+views:
+  - type: cards
+    name: 视图
+    cardSize: 220
+    image: file.file
+    imageFit: ""
+    imageAspectRatio: 0.3
+  - type: table
+    name: 表格
+    order:
+      - file.path
+      - file.name
+      - file.folder
+    sort:
+      - property: file.folder
+        direction: ASC
+      - property: file.path
+        direction: ASC

@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>游戏客户端作品集路线 · 引擎+UI+渲染</title>
+<style>
+  :root {
+    --bg: #0e0e10;
+    --bg2: #16161a;
+    --bg3: #1e1e24;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #e8e8f0;
+    --muted: #8888a0;
+    --faint: #555568;
+    --purple: #a78bfa;
+    --purple-dim: rgba(167,139,250,0.12);
+    --purple-border: rgba(167,139,250,0.3);
+    --teal: #2dd4bf;
+    --teal-dim: rgba(45,212,191,0.1);
+    --teal-border: rgba(45,212,191,0.25);
+    --blue: #60a5fa;
+    --blue-dim: rgba(96,165,250,0.1);
+    --blue-border: rgba(96,165,250,0.25);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251,191,36,0.1);
+    --amber-border: rgba(251,191,36,0.25);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.1);
+    --green: #4ade80;
+    --green-dim: rgba(74,222,128,0.1);
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+  .page { max-width: 860px; margin: 0 auto; padding: 48px 24px 80px; }
+
+  /* header */
+  .hero { margin-bottom: 48px; }
+  .hero-label { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: var(--purple); text-transform: uppercase; margin-bottom: 12px; }
+  .hero-title { font-size: 28px; font-weight: 700; color: #fff; line-height: 1.25; margin-bottom: 10px; }
+  .hero-sub { font-size: 14px; color: var(--muted); line-height: 1.7; max-width: 560px; }
+  .meta-row { display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
+  .meta-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .meta-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  /* ui note */
+  .ui-note { background: var(--amber-dim); border: 1px solid var(--amber-border); border-radius: var(--radius); padding: 14px 18px; margin-bottom: 40px; }
+  .ui-note-title { font-size: 13px; font-weight: 600; color: var(--amber); margin-bottom: 4px; }
+  .ui-note-body { font-size: 13px; color: #d4b96a; line-height: 1.65; }
+
+  /* phase */
+  .phase { margin-bottom: 16px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .phase-head {
+    display: flex; align-items: center; gap: 14px; padding: 16px 20px;
+    cursor: pointer; background: var(--bg2); user-select: none;
+    transition: background 0.15s;
+  }
+  .phase-head:hover { background: var(--bg3); }
+  .phase-badge {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; flex-shrink: 0;
+  }
+  .phase-meta { flex: 1 }
+  .phase-title { font-size: 15px; font-weight: 600; color: #fff; }
+  .phase-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .phase-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag {
+    font-size: 11px; font-weight: 500; padding: 2px 9px;
+    border-radius: 20px; border: 1px solid; white-space: nowrap;
+  }
+  .chevron { font-size: 18px; color: var(--faint); transition: transform 0.2s; flex-shrink: 0; }
+  .phase-body { display: none; border-top: 1px solid var(--border); }
+  .phase-body.open { display: block; }
+
+  /* sections inside body */
+  .section { padding: 20px 20px 0; }
+  .section:last-child { padding-bottom: 20px; }
+  .section + .section { border-top: 1px solid var(--border); padding-top: 20px; }
+  .section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--faint); margin-bottom: 10px;
+  }
+  .items { display: flex; flex-direction: column; gap: 7px; }
+  .item { display: flex; gap: 10px; font-size: 13px; color: var(--text); line-height: 1.6; }
+  .dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; margin-top: 7px; }
+
+  /* resource cards */
+  .res-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+  .res-card {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 10px 12px;
+    text-decoration: none; display: block; transition: border-color 0.15s;
+  }
+  .res-card:hover { border-color: var(--border2); }
+  .res-card-top { display: flex; align-items: center; gap: 7px; margin-bottom: 3px; }
+  .res-icon { font-size: 14px; }
+  .res-name { font-size: 13px; font-weight: 500; color: #fff; }
+  .res-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .res-tag { font-size: 10px; font-weight: 500; padding: 1px 6px; border-radius: 3px; margin-top: 5px; display: inline-block; }
+
+  /* highlight box */
+  .hbox { border-radius: var(--radius-sm); padding: 12px 14px; margin-top: 12px; }
+  .hbox-title { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .hbox-body { font-size: 13px; line-height: 1.65; }
+
+  /* code */
+  code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 12px; background: rgba(255,255,255,0.07);
+    padding: 1px 5px; border-radius: 3px; color: var(--teal);
+  }
+
+  /* timeline at top */
+  .timeline { display: flex; gap: 0; margin-bottom: 40px; overflow-x: auto; padding-bottom: 4px; }
+  .tl-item { flex: 1; min-width: 120px; position: relative; }
+  .tl-item:not(:last-child)::after {
+    content: ''; position: absolute; top: 14px; right: 0;
+    width: 50%; height: 1px; background: var(--border2);
+  }
+  .tl-item:not(:first-child)::before {
+    content: ''; position: absolute; top: 14px; left: 0;
+    width: 50%; height: 1px; background: var(--border2);
+  }
+  .tl-dot-wrap { display: flex; justify-content: center; margin-bottom: 8px; position: relative; z-index: 1; }
+  .tl-dot-outer { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .tl-text { text-align: center; padding: 0 6px; }
+  .tl-month { font-size: 10px; color: var(--faint); margin-bottom: 2px; }
+  .tl-label { font-size: 11px; font-weight: 500; color: var(--muted); line-height: 1.4; }
+
+  /* deliverable */
+  .deliverable { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; margin-top: 10px; }
+  .deliverable-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); margin-bottom: 5px; }
+  .deliverable-items { display: flex; flex-direction: column; gap: 4px; }
+  .deliverable-item { font-size: 12px; color: var(--muted); display: flex; align-items: flex-start; gap: 7px; }
+  .check { color: var(--green); flex-shrink: 0; }
+
+  strong { font-weight: 600; color: #fff; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif; font-size: 14px; line-height: 1.7; }
+.page { max-width: 820px; margin: 0 auto; padding: 44px 22px 80px; }
+
+.hero-label { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; color: var(--purple); text-transform: uppercase; margin-bottom: 10px; }
+.hero-title { font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+.hero-sub { font-size: 13px; color: var(--muted); line-height: 1.7; max-width: 560px; margin-bottom: 28px; }
+
+/* 时间说明块 */
+.time-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 36px; }
+.time-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: 16px 18px; }
+.time-card-title { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; }
+.time-row { display: flex; gap: 8px; font-size: 13px; color: var(--muted); margin-bottom: 6px; align-items: flex-start; }
+.time-row:last-child { margin-bottom: 0; }
+.time-tag { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+
+/* section header */
+.sec-header { display: flex; align-items: center; gap: 10px; margin: 32px 0 14px; }
+.sec-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.sec-title { font-size: 17px; font-weight: 700; color: #fff; }
+.sec-sub { font-size: 12px; color: var(--muted); margin-left: auto; }
+
+/* phase card */
+.phase { border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 12px; overflow: hidden; }
+.ph-head { display: flex; align-items: center; gap: 12px; padding: 14px 18px; cursor: pointer; background: var(--bg2); user-select: none; transition: background 0.15s; }
+.ph-head:hover { background: var(--bg3); }
+.ph-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.ph-info { flex: 1; }
+.ph-title { font-size: 14px; font-weight: 600; color: #fff; }
+.ph-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.ph-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+.tag { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; border: 1px solid; white-space: nowrap; }
+.chev { font-size: 18px; color: var(--faint); transition: transform 0.2s; flex-shrink: 0; }
+.ph-body { display: none; border-top: 1px solid var(--border); }
+.ph-body.open { display: block; }
+
+.inner { padding: 16px 18px; }
+.inner + .inner { border-top: 1px solid var(--border); }
+.label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-bottom: 9px; }
+.items { display: flex; flex-direction: column; gap: 6px; }
+.item { display: flex; gap: 9px; font-size: 13px; color: var(--text); line-height: 1.6; }
+.dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; margin-top: 7px; }
+
+/* 穿插表格 */
+.link-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.link-table th { font-size: 11px; font-weight: 600; color: var(--faint); text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); letter-spacing: 0.05em; text-transform: uppercase; }
+.link-table td { font-size: 13px; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.link-table tr:last-child td { border-bottom: none; }
+.link-table td:first-child { color: var(--text); font-weight: 500; white-space: nowrap; }
+
+/* res grid */
+.res-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-top: 10px; }
+.res-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--rs); padding: 10px 12px; text-decoration: none; display: block; transition: border-color 0.15s; }
+.res-card:hover { border-color: var(--border2); }
+.res-name { font-size: 13px; font-weight: 500; color: #fff; margin-bottom: 2px; }
+.res-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+.res-tag { font-size: 10px; font-weight: 500; padding: 1px 6px; border-radius: 3px; margin-top: 5px; display: inline-block; }
+
+.hbox { border-radius: var(--rs); padding: 11px 14px; margin-top: 10px; }
+.hbox-t { font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+.hbox-b { font-size: 13px; line-height: 1.65; }
+
+code { font-family: 'JetBrains Mono','Fira Code',monospace; font-size: 12px; background: rgba(255,255,255,0.07); padding: 1px 5px; border-radius: 3px; color: var(--teal); }
+strong { font-weight: 600; color: #fff; }
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* 每周节奏 */
+.week-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-start; }
+.week-label { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+.week-content { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+@media (max-width: 540px) {
+  .time-grid { grid-template-columns: 1fr; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="hero">
+    <div class="hero-label">游戏客户端 · 实习作品集路线</div>
+    <div class="hero-title">引擎 · UI程序 · 渲染<br>合并单线路线图</div>
+    <div class="hero-sub">大二下 → 大三结束，约 7–8 个月。目标是做出两个有设计深度、能讲清楚的项目，覆盖引擎、UI、渲染三个维度。</div>
+    <div class="meta-row">
+      <div class="meta-item"><div class="meta-dot" style="background:var(--purple)"></div>总时长约 30 周</div>
+      <div class="meta-item"><div class="meta-dot" style="background:var(--teal)"></div>2 个核心作品</div>
+      <div class="meta-item"><div class="meta-dot" style="background:var(--blue)"></div>目标：心动/莉莉丝/鹰角实习</div>
+      <div class="meta-item"><div class="meta-dot" style="background:var(--amber)"></div>冲刺：腾讯/网易/字节</div>
+    </div>
+  </div>
+
+  <!-- UI设计稿说明 -->
+  <div class="ui-note">
+    <div class="ui-note-title">关于用网上 UI 成图来做项目——可以，而且推荐</div>
+    <div class="ui-note-body">
+      找 Dribbble、UI中国、站酷上的游戏 UI 设计稿，按照设计稿还原成 Unity UGUI 实现，这是一个非常标准的练法。重点是你要在 README 里注明"UI 设计来源：XXX，程序实现部分为本人独立开发"，同时说明你实现了哪些技术点（动画、数据绑定、面板管理等）。面试官看的是你的程序实现能力，不是设计能力。推荐找参考的平台：<a href="https://dribbble.com/search/game-ui" target="_blank">Dribbble · game ui</a>、<a href="https://www.ui.cn" target="_blank">UI中国</a>、<a href="https://www.zcool.com.cn" target="_blank">站酷</a>。
+    </div>
+  </div>
+
+  <!-- 时间线 -->
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot-outer" style="background:var(--purple-dim);color:var(--purple);border:1px solid var(--purple-border)">1</div></div>
+      <div class="tl-text"><div class="tl-month">现在 → 第4周</div><div class="tl-label">地基修补<br>认知建立</div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot-outer" style="background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border)">2</div></div>
+      <div class="tl-text"><div class="tl-month">第5–8周</div><div class="tl-label">图形学数学<br>Shader 进阶</div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot-outer" style="background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-border)">3</div></div>
+      <div class="tl-text"><div class="tl-month">第9–16周</div><div class="tl-label">作品集 #1<br>编辑器工具</div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot-outer" style="background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border)">4</div></div>
+      <div class="tl-text"><div class="tl-month">第17–26周</div><div class="tl-label">作品集 #2<br>UI+渲染 Demo</div></div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot-wrap"><div class="tl-dot-outer" style="background:var(--red-dim);color:var(--red);border:1px solid rgba(248,113,113,0.3)">5</div></div>
+      <div class="tl-text"><div class="tl-month">第27周起</div><div class="tl-label">投简历<br>面试冲刺</div></div>
+    </div>
+  </div>
+
+  <!-- 阶段1 -->
+  <div class="phase" id="ph1">
+    <div class="phase-head" onclick="tog('ph1')">
+      <div class="phase-badge" style="background:var(--purple-dim);color:var(--purple)">01</div>
+      <div class="phase-meta">
+        <div class="phase-title">地基修补 · 把测评漏洞逐一关掉</div>
+        <div class="phase-desc">第 1–4 周 · 不写新项目，只验证和理解</div>
+      </div>
+      <div class="phase-tags">
+        <span class="tag" style="color:var(--purple);border-color:var(--purple-border);background:var(--purple-dim)">现在开始</span>
+      </div>
+      <span class="chevron" id="ph1-c">›</span>
+    </div>
+    <div class="phase-body" id="ph1-b">
+      <div class="section">
+        <div class="section-label">你测评里的具体漏洞（逐个击破）</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--purple)"></div><div><strong>OnEnable/OnDisable 事件注册：</strong>在 OnEnable 里 += 订阅，OnDisable 里 -= 取消。去Unity写一个测试场景，SetActive 几次，用 Debug.Log 验证是否重复触发。</div></div>
+          <div class="item"><div class="dot" style="background:var(--purple)"></div><div><strong>GC 真实触发点（重点纠正）：</strong>打开 Unity Profiler → Memory，<strong>亲眼跑一遍这几个操作并看 GC Alloc 列</strong>：① string 拼接（会产生）② new List&lt;&gt;（会产生）③ 访问 <code>GameManager.Instance.Player.HP</code>（<strong>不产生，只是读引用</strong>——你测评里两次都把这个算成GC来源，这个误区必须用Profiler亲眼验证才能真正关掉）。眼见为实，不要只靠理解。</div></div>
+          <div class="item"><div class="dot" style="background:var(--purple)"></div><div><strong>List vs Queue 对象池：</strong>写两个版本的对象池，一个用 List.RemoveAt(0)，一个用 Queue.Dequeue()，用 Stopwatch 各跑 10 万次，打印耗时对比。</div></div>
+          <div class="item"><div class="dot" style="background:var(--purple)"></div><div><strong>访问引用 vs 创建对象的边界：</strong>这是测评里反复出现的混淆点。记住一条：<code>new</code>、字符串拼接、装箱、LINQ、闭包捕获变量——这些会分配堆内存产生GC。读字段、调方法、访问属性——不会。用 Profiler 跑一遍，看 GC Alloc 列是否为0来验证。</div></div>
+          <div class="item"><div class="dot" style="background:var(--purple)"></div><div><strong>数据驱动 Buff 设计：</strong>把你测评里写的"每种 Buff 一个子类"的方案，改成 ScriptableObject 配表 + EffectType 枚举驱动，实际写一遍感受区别。</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-label">引擎底层认知建立（同步进行）</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--muted)"></div><div>Unity PlayerLoop 结构：Update/FixedUpdate/LateUpdate 执行顺序，为什么物理在 FixedUpdate，为什么摄像机跟随在 LateUpdate</div></div>
+          <div class="item"><div class="dot" style="background:var(--muted)"></div><div>Addressables 基本概念：AssetBundle 和 Addressables 的区别，为什么要用引用计数管理加载的资源</div></div>
+          <div class="item"><div class="dot" style="background:var(--muted)"></div><div>SRP Batcher 是什么：为什么同一个材质的对象 Draw Call 能合并，哪些情况会打断合并</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-label">⚡ 第2周同步启动：编辑器工具 MVP（不等到阶段3）</div>
+        <div class="hbox" style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.25)">
+          <div class="hbox-title" style="color:var(--blue)">为什么第2周就开始，而不是等到第9周</div>
+          <div class="hbox-body" style="color:#93c5fd">测评结果已经说明：你最大的短板是"项目交付经验"，不是知识量。继续积累理论只会让知识更散，只有做出一个跑得起来的东西才能把知识压实。地基漏洞和图形学数学可以<strong>边做边补</strong>，不需要全准备好再动手。</div>
+        </div>
+        <div class="items" style="margin-top:10px">
+          <div class="item"><div class="dot" style="background:var(--blue)"></div><div><strong>Phase 1（第2周，整块时间2-3h）：</strong>建一个 EditorWindow，能显示当前场景所有 GameObject 的名字和路径。跑得起来就算完成，不要求好看。</div></div>
+          <div class="item"><div class="dot" style="background:var(--blue)"></div><div><strong>Phase 2（阶段1期间穿插）：</strong>加上 XML 导出功能，监听 hierarchyChanged 自动刷新。</div></div>
+          <div class="item"><div class="dot" style="background:var(--blue)"></div><div><strong>Phase 3-4（阶段3集中完成）：</strong>Kotlin 写 Rider 插件读取 XML，完善 EditorWindow 配置面板。这两步进入阶段3再集中做，不要现在就碰 Kotlin。</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-label">参考资料</div>
+        <div class="res-grid">
+          <a class="res-card" href="https://docs.unity3d.com/Manual/ExecutionOrder.html" target="_blank">
+            <div class="res-card-top"><span class="res-icon">📄</span><span class="res-name">Unity 执行顺序文档</span></div>
+            <div class="res-desc">官方说明各生命周期函数的执行时机，必读</div>
+            <span class="res-tag" style="background:var(--purple-dim);color:var(--purple)">官方文档</span>
+          </a>
+          <a class="res-card" href="https://docs.unity3d.com/Packages/com.unity.addressables@latest" target="_blank">
+            <div class="res-card-top"><span class="res-icon">📦</span><span class="res-name">Addressables 文档</span></div>
+            <div class="res-desc">资源加载管理系统，看 Getting Started 部分</div>
+            <span class="res-tag" style="background:var(--purple-dim);color:var(--purple)">官方文档</span>
+          </a>
+          <a class="res-card" href="https://blog.unity.com/engine-platform/srp-batcher-speed-up-your-rendering" target="_blank">
+            <div class="res-card-top"><span class="res-icon">✍️</span><span class="res-name">SRP Batcher 原理</span></div>
+            <div class="res-desc">Unity 官方博客，解释 SRP Batcher 的工作机制</div>
+            <span class="res-tag" style="background:var(--blue-dim);color:var(--blue)">博客</span>
+          </a>
+          <a class="res-card" href="https://github.com/akof1314/QFramework" target="_blank">
+            <div class="res-card-top"><span class="res-icon">🔧</span><span class="res-name">QFramework 源码</span></div>
+            <div class="res-desc">重点看 UIKit、ObjectPool、EventSystem 三个模块</div>
+            <span class="res-tag" style="background:var(--green-dim);color:var(--green)">源码参考</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin:0 0 16px;padding:12px 18px;background:linear-gradient(90deg,rgba(167,139,250,0.08),transparent);border-left:3px solid var(--purple);border-radius:0 var(--radius-sm) var(--radius-sm) 0">
+    <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--purple);margin-bottom:4px">阶段1结束后，你的位置</div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.65">测评里的漏洞已关闭，对Unity引擎的运行机制有了第一手的感受（不是背来的），可以开始接触图形学数学而不会因为引擎概念模糊卡住。</div>
+  </div>
+
+  <!-- 阶段2 -->
+  <div class="phase" id="ph2">
+    <div class="phase-head" onclick="tog('ph2')">
+      <div class="phase-badge" style="background:var(--teal-dim);color:var(--teal)">02</div>
+      <div class="phase-meta">
+        <div class="phase-title">图形学数学 · Shader 进阶</div>
+        <div class="phase-desc">第 5–8 周 · 从你的 42 题基础继续往深走</div>
+      </div>
+      <div class="phase-tags">
+        <span class="tag" style="color:var(--teal);border-color:var(--teal-border);background:var(--teal-dim)">渲染方向地基</span>
+      </div>
+      <span class="chevron" id="ph2-c">›</span>
+    </div>
+    <div class="phase-body" id="ph2-b">
+      <div class="section">
+        <div class="section-label">必须搞懂的数学概念（按顺序）</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--teal)"></div><div><strong>MVP 矩阵变换链：</strong>Model → World → View → Clip → NDC → 屏幕。能手推每一步在干什么，能解释为什么需要齐次坐标的 w 分量</div></div>
+          <div class="item"><div class="dot" style="background:var(--teal)"></div><div><strong>法线变换：</strong>为什么法线不能用 Model 矩阵直接变换，逆转置矩阵从哪来，TBN 矩阵是什么、法线贴图采样之后为什么要乘 TBN</div></div>
+          <div class="item"><div class="dot" style="background:var(--teal)"></div><div><strong>PBR 物理基础：</strong>能量守恒（漫反射+镜面反射≤1），菲涅尔效应（掠射角反射更强），微表面模型（roughness 控制高光形状），metallic 控制什么</div></div>
+          <div class="item"><div class="dot" style="background:var(--teal)"></div><div><strong>深度缓冲：</strong>为什么深度是非线性的，Z-fighting 怎么产生，Early-Z 是什么</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-label">这个阶段要写的 Shader（接着 42 题继续）</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--teal)"></div><div><strong>法线贴图 Shader：</strong>在切线空间采样法线贴图，正确计算光照。对比有法线贴图和没有的效果差异</div></div>
+          <div class="item"><div class="dot" style="background:var(--teal)"></div><div><strong>简单 PBR Lit Shader：</strong>在 URP 里手写，实现 Lambert 漫反射 + GGX 高光 + 菲涅尔。不求完美，求理解每一行代码的物理含义</div></div>
+          <div class="item"><div class="dot" style="background:var(--teal)"></div><div><strong>溶解效果：</strong>噪声图采样 + clip()，加边缘颜色渐变（smoothstep），这个效果在手游里极常见，面试必问</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-label">参考资料</div>
+        <div class="res-grid">
+          <a class="res-card" href="https://learnopengl-cn.github.io" target="_blank">
+            <div class="res-card-top"><span class="res-icon">📖</span><span class="res-name">LearnOpenGL 中文版</span></div>
+            <div class="res-desc">重点看：坐标系统、光照、法线贴图、PBR 章节</div>
+            <span class="res-tag" style="background:var(--teal-dim);color:var(--teal)">必读</span>
+          </a>
+          <a class="res-card" href="https://shader-learning.com" target="_blank">
+            <div class="res-card-top"><span class="res-icon">🎮</span><span class="res-name">shader-learning.com</span></div>
+            <div class="res-desc">你已经做到 42 题，继续往后做，法线贴图部分最重要</div>
+            <span class="res-tag" style="background:var(--teal-dim);color:var(--teal)">已在用</span>
+          </a>
+          <a class="res-card" href="https://docs.unity3d.com/Manual/SL-SurfaceShaders.html" target="_blank">
+            <div class="res-card-top"><span class="res-icon">📄</span><span class="res-name">Unity URP Shader 文档</span></div>
+            <div class="res-desc">ShaderLab 语法 + HLSL 在 URP 里的用法</div>
+            <span class="res-tag" style="background:var(--purple-dim);color:var(--purple)">官方文档</span>
+          </a>
+          <a class="res-card" href="https://catlikecoding.com/unity/tutorials/rendering/" target="_blank">
+            <div class="res-card-top"><span class="res-icon">🐱</span><span class="res-name">Catlike Coding · Rendering</span></div>
+            <div class="res-desc">从零手写渲染管线，数学解释非常清晰，英文但图多</div>
+            <span class="res-tag" style="background:var(--blue-dim);color:var(--blue)">深度参考</span>
+          </a>
+          <a class="res-card" href="https://www.bilibili.com/video/BV1X7411F744" target="_blank">
+            <div class="res-card-top"><span class="res-icon">📺</span><span class="res-name">《Unity Shader 入门精要》配套视频</span></div>
+            <div class="res-desc">冯乐乐的书的B站配套讲解，中文，图形学数学部分讲得很清楚</div>
+            <span class="res-tag" style="background:var(--amber-dim);color:var(--amber)">视频</span>
+          </a>
+          <a class="res-card" href="https://book.douban.com/subject/26821639/" target="_blank">
+            <div class="res-card-top"><span class="res-icon">📚</span><span class="res-name">《Unity Shader 入门精要》</span></div>
+            <div class="res-desc">冯乐乐著，国内最好的 Unity 渲染书，PDF 网上可找到</div>
+            <span class="res-tag" style="background:var(--amber-dim);color:var(--amber)">书籍</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin:0 0 16px;padding:12px 18px;background:linear-gradient(90deg,rgba(45,212,191,0.08),transparent);border-left:3px solid var(--teal);border-radius:0 var(--radius-sm) var(--radius-sm) 0">
+    <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--teal);margin-bottom:4px">阶段2结束后，你的位置</div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.65">能手写简单的 PBR Shader 并解释每行代码的物理含义，能写溶解、描边这类手游常见效果。写 Shader 不再是"改参数看效果"，而是"知道改哪个参数、为什么"。代码基础三个概念也在这个阶段过完，第三阶段开始写项目不会被语法卡住。</div>
+  </div>
+
+  <!-- 阶段3 -->
+  <div class="phase" id="ph3">
+    <div class="phase-head" onclick="tog('ph3')">
+      <div class="phase-badge" style="background:var(--blue-dim);color:var(--blue)">03</div>
+      <div class="phase-meta">
+        <div class="phase-title">作品集 #1 · 编辑器工具（Hierarchy 插件）</div>
+        <div class="phase-desc">第 9–16 周 · 把你已经开始的东西做完</div>
+      </div>
+      <div class="phase-tags">
+        <span class="tag" style="color:var(--blue);border-color:var(--blue-border);background:var(--blue-dim)">作品集 #1</span>
+        <span class="tag" style="color:var(--muted);border-color:var(--border);background:transparent">引擎向</span>
+      </div>
+      <span class="chevron" id="ph3-c">›</span>
+    </div>
+    <div class="phase-body" id="ph3-b">
+      <div class="section">
+        <div class="section-label">你卡住的 API——三个就够了</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--blue)"></div><div><code>EditorApplication.hierarchyChanged</code>：监听场景 Hierarchy 变化事件，在这里触发数据刷新</div></div>
+          <div class="item"><div class="dot" style="background:var(--blue)"></div><div><code>GameObject.FindObjectsOfType&lt;Transform&gt;()</code>：获取场景中所有 Transform，遍历拿到 Hierarchy 列表（注意性能，只在 hierarchyChanged 时调用）</div></div>
+          <div class="item"><div class="dot" style="background:var(--blue)"></div><div><code>EditorWindow.GetWindow&lt;T&gt;()</code>：创建编辑器面板；配合 <code>AssetDatabase.SaveAssets()</code> 把配置持久化</div></div>
+        </div>
+        <div class="hbox" style="background:var(--blue-dim);border:1px solid var(--blue-border)">
+          <div class="hbox-title" style="color:var(--blue)">往 Rider 传数据的方案</div>
+          <div class="hbox-body" style="color:#93c5fd">Unity 侧生成 <strong>XML 文件</strong>（可读性比 JSON 好，结构清晰），存到项目目录。Rider 侧用 <strong>Kotlin 写 IntelliJ 插件</strong>，监听 XML 文件变化并解析。Kotlin 顺带学一点没坏处，之后做 Android/手机方向会用到。Rider 插件开发文档不多，直接配合 AI 写，重点是理解每一段代码在做什么。</div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-label">功能清单（按优先级）</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--blue)"></div><div><strong>P0 必做：</strong>EditorWindow 面板，显示当前场景所有 GameObject 的路径；一键导出为 XML；监听 Hierarchy 变化自动刷新</div></div>
+          <div class="item"><div class="dot" style="background:var(--blue)"></div><div><strong>P1 做了更好：</strong>支持过滤（只导出带特定 Component 的节点）；支持配置导出路径；加一个"复制路径"按钮</div></div>
+          <div class="item"><div class="dot" style="background:var(--blue)"></div><div><strong>P2 时间够再做：</strong>Rider 侧的 File Watcher 配置教程（写在 README 里，告诉用户怎么配）</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-label">README 必须写的内容</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--muted)"></div><div>这个工具解决了什么问题（一句话，要具体：不是"提升效率"，是"在 Unity 和 Rider 来回切换时找不到对应类名，这个工具把 Hierarchy 同步成可检索的结构"）</div></div>
+          <div class="item"><div class="dot" style="background:var(--muted)"></div><div>技术实现：用了哪个 API，遇到了什么问题，怎么解决的</div></div>
+          <div class="item"><div class="dot" style="background:var(--muted)"></div><div>如果重做会改什么（这个面试官很喜欢看，说明你有反思能力）</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-label">参考资料</div>
+        <div class="res-grid">
+          <a class="res-card" href="https://docs.unity3d.com/Manual/editor-EditorWindows.html" target="_blank">
+            <div class="res-card-top"><span class="res-icon">📄</span><span class="res-name">EditorWindow 官方文档</span></div>
+            <div class="res-desc">自定义编辑器面板的完整 API 说明</div>
+            <span class="res-tag" style="background:var(--purple-dim);color:var(--purple)">官方文档</span>
+          </a>
+          <a class="res-card" href="https://docs.unity3d.com/ScriptReference/EditorApplication-hierarchyChanged.html" target="_blank">
+            <div class="res-card-top"><span class="res-icon">📄</span><span class="res-name">hierarchyChanged API</span></div>
+            <div class="res-desc">你卡住的那个事件的官方说明页</div>
+            <span class="res-tag" style="background:var(--purple-dim);color:var(--purple)">官方文档</span>
+          </a>
+          <a class="res-card" href="https://www.youtube.com/results?search_query=unity+editor+extension+tutorial" target="_blank">
+            <div class="res-card-top"><span class="res-icon">📺</span><span class="res-name">Unity Editor Extension 教程</span></div>
+            <div class="res-desc">YouTube 搜索，找播放量高的，看 EditorWindow + MenuItem 部分</div>
+            <span class="res-tag" style="background:var(--amber-dim);color:var(--amber)">视频</span>
+          </a>
+          <a class="res-card" href="https://github.com/Unity-Technologies/UnityCsReference" target="_blank">
+            <div class="res-card-top"><span class="res-icon">🔧</span><span class="res-name">Unity C# 源码（参考）</span></div>
+            <div class="res-desc">看 Editor 目录，了解 Unity 自己怎么做编辑器扩展</div>
+            <span class="res-tag" style="background:var(--green-dim);color:var(--green)">源码参考</span>
+          </a>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-label">Kotlin + IntelliJ 插件开发资料</div>
+        <div class="res-grid">
+          <a class="res-card" href="https://kotlinlang.org/docs/getting-started.html" target="_blank">
+            <div class="res-card-top"><span class="res-icon">📄</span><span class="res-name">Kotlin 官方文档</span></div>
+            <div class="res-desc">看 Get started 和 Basic syntax 两章就够入门，有 C# 基础学 Kotlin 很快，大部分概念是相通的</div>
+            <span class="res-tag" style="background:var(--purple-dim);color:var(--purple)">官方文档</span>
+          </a>
+          <a class="res-card" href="https://plugins.jetbrains.com/docs/intellij/getting-started.html" target="_blank">
+            <div class="res-card-top"><span class="res-icon">📄</span><span class="res-name">IntelliJ 插件开发文档</span></div>
+            <div class="res-desc">官方 SDK 文档，看 Creating Your First Plugin 和 File Watching 两节，其他按需查</div>
+            <span class="res-tag" style="background:var(--purple-dim);color:var(--purple)">官方文档</span>
+          </a>
+          <a class="res-card" href="https://github.com/JetBrains/intellij-platform-plugin-template" target="_blank">
+            <div class="res-card-top"><span class="res-icon">🔧</span><span class="res-name">IntelliJ 插件模板</span></div>
+            <div class="res-desc">JetBrains 官方出的插件项目模板，直接 clone 用，省去从零搭项目结构的时间</div>
+            <span class="res-tag" style="background:var(--green-dim);color:var(--green)">模板</span>
+          </a>
+          <a class="res-card" href="https://plugins.jetbrains.com/docs/intellij/virtual-file-system.html" target="_blank">
+            <div class="res-card-top"><span class="res-icon">📄</span><span class="res-name">VFS 文件监听文档</span></div>
+            <div class="res-desc">IntelliJ 的虚拟文件系统，监听 XML 文件变化用 VirtualFileListener，这是 Rider 侧的核心 API</div>
+            <span class="res-tag" style="background:var(--purple-dim);color:var(--purple)">核心 API</span>
+          </a>
+          <a class="res-card" href="https://www.bilibili.com/video/BV1Tt4y117bV" target="_blank">
+            <div class="res-card-top"><span class="res-icon">📺</span><span class="res-name">Kotlin 入门（B站）</span></div>
+            <div class="res-desc">中文，有 Java/C# 基础的人看这个入门很快，重点看语法差异部分</div>
+            <span class="res-tag" style="background:var(--amber-dim);color:var(--amber)">视频</span>
+          </a>
+          <a class="res-card" href="https://github.com/topics/intellij-plugin" target="_blank">
+            <div class="res-card-top"><span class="res-icon">🔧</span><span class="res-name">GitHub · intellij-plugin</span></div>
+            <div class="res-desc">看别人写的开源插件是最快的学习方式，找 star 多的小插件，看它怎么注册监听器、怎么解析文件</div>
+            <span class="res-tag" style="background:var(--green-dim);color:var(--green)">源码参考</span>
+          </a>
+        </div>
+      </div>
+      <div class="section">
+        <div class="deliverable">
+          <div class="deliverable-label">完成标准</div>
+          <div class="deliverable-items">
+            <div class="deliverable-item"><span class="check">✓</span>插件能跑，功能符合 P0 清单</div>
+            <div class="deliverable-item"><span class="check">✓</span>GitHub 上有 README，能读懂你解决了什么问题</div>
+            <div class="deliverable-item"><span class="check">✓</span>能用一段话讲清楚：动机 → 技术方案 → 遇到的问题 → 解决方式</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin:0 0 16px;padding:12px 18px;background:linear-gradient(90deg,rgba(96,165,250,0.08),transparent);border-left:3px solid var(--blue);border-radius:0 var(--radius-sm) var(--radius-sm) 0">
+    <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--blue);margin-bottom:4px">阶段3结束后，你的位置</div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.65">有了第一个做完的、能展示的东西。更重要的是重建了"能做完一个项目"的信心。对Unity Editor扩展API有真实使用经验，顺带学了一点Kotlin，作品集从零变成了有。这个阶段结束可以开始小范围投简历探路，或者继续做作品集#2再一起投。</div>
+  </div>
+
+  <!-- 阶段4 -->
+  <div class="phase" id="ph4">
+    <div class="phase-head" onclick="tog('ph4')">
+      <div class="phase-badge" style="background:var(--amber-dim);color:var(--amber)">04</div>
+      <div class="phase-meta">
+        <div class="phase-title">作品集 #2 · UI框架 + Shader 效果集合并 Demo</div>
+        <div class="phase-desc">第 17–26 周 · 三个方向合成一个能跑的东西</div>
+      </div>
+      <div class="phase-tags">
+        <span class="tag" style="color:var(--amber);border-color:var(--amber-border);background:var(--amber-dim)">作品集 #2（核心）</span>
+        <span class="tag" style="color:var(--muted);border-color:var(--border);background:transparent">UI · 渲染 · 引擎</span>
+      </div>
+      <span class="chevron" id="ph4-c">›</span>
+    </div>
+    <div class="phase-body" id="ph4-b">
+      <div class="section">
+        <div class="section-label">整体思路：三个方向合一个 Demo</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--amber)"></div><div>做一个<strong>小场景</strong>（哪怕就是点击按钮触发一个战斗动作），Shader 效果用在场景物体上，UI 框架管理游戏界面，引擎向的对象池作为底座</div></div>
+          <div class="item"><div class="dot" style="background:var(--amber)"></div><div>UI 设计稿从 Dribbble / 站酷找一个游戏风格的，按照设计稿还原——不需要自己设计，只需要程序实现</div></div>
+          <div class="item"><div class="dot" style="background:var(--amber)"></div><div>录一段 30–60 秒的 GIF 或视频放在 README 最顶部，面试官第一眼就能看到效果</div></div>
+        </div>
+        <div class="hbox" style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.22);margin-top:10px">
+          <div class="hbox-title" style="color:var(--amber)">⚠️ 范围控制（重要）</div>
+          <div class="hbox-body" style="color:#d4b96a">根据测评结果，你最大的风险是<strong>项目不断扩张导致无法收尾</strong>。本阶段砍掉了：Addressables、Skill系统、水体、卡通渲染、RenderFeature Bloom。保留核心六个：UIManager + EventBus + DOTween动画 + 描边 + 溶解 + PBR Shader。<strong>完整比完美重要</strong>，这六个做扎实、能讲清楚，已经足够投简历。剩余内容可以作为第三个项目或后续迭代。</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">UI 框架部分——必须实现的技术点</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--teal)"></div><div><strong>面板管理：</strong>用 Dictionary&lt;string, UIPanel&gt; 管理所有面板，支持 Show/Hide/Push/Pop，用 Canvas sortingOrder 控制层级</div></div>
+          <div class="item"><div class="dot" style="background:var(--teal)"></div><div><strong>数据绑定（MVP）：</strong>Presenter 监听 Model 数据变化，驱动 View 刷新。View 不直接读 Model，Model 不知道 View 存在</div></div>
+          <div class="item"><div class="dot" style="background:var(--teal)"></div><div><strong>进出场动画：</strong>用 DOTween 做面板 Fade + Scale 动画，在 UIPanel 基类里定义 OnShow()/OnHide() 虚函数，子类重写</div></div>
+          <div class="item"><div class="dot" style="background:var(--teal)"></div><div><strong>事件系统：</strong>用 Dictionary&lt;Type, Action&gt; 实现，OnEnable 注册 OnDisable 取消，解决内存泄漏问题（这是你测评漏洞之一）</div></div>
+        </div>
+        <div class="hbox" style="background:var(--amber-dim);border:1px solid var(--amber-border);margin-top:10px">
+          <div class="hbox-title" style="color:var(--amber)">UI 设计稿怎么找、怎么用</div>
+          <div class="hbox-body" style="color:#d4b96a">去 Dribbble 搜 "game ui dark" 或 "rpg hud design"，找一个你觉得能还原的设计稿截图保存。在 README 里写清楚"UI 视觉设计参考自 Dribbble · [作者名]，程序实现部分为独立开发"。面试官完全接受这种做法，关键是你的程序实现部分要扎实。</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Shader 效果部分——做这 3 个（核心，不贪多）</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--blue)"></div><div><strong>① 描边（两种方案）：</strong>法线外扩 vs 后处理描边，两种都实现，README 里说明各自适用场景和性能差异</div></div>
+          <div class="item"><div class="dot" style="background:var(--blue)"></div><div><strong>② 溶解 + 边缘发光：</strong>噪声图采样 + clip()，用 smoothstep 做边缘渐变颜色，手游里出现频率最高的效果之一</div></div>
+          <div class="item"><div class="dot" style="background:var(--blue)"></div><div><strong>③ 简单 PBR：</strong>在 URP 里手写 Lit Shader，实现 Lambert + GGX + Fresnel，对比 Unity 自带 Lit 的效果</div></div>
+        </div>
+        <div class="hbox" style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.22);margin-top:10px">
+          <div class="hbox-title" style="color:var(--blue)">砍掉的内容放哪</div>
+          <div class="hbox-body" style="color:#93c5fd">Bloom（RenderFeature）、水面、卡通渲染——这些放在三个项目做完之后，有时间再加。先把这三个做扎实、每个配 before/after 截图和技术说明，已经足够。</div>
+        </div>
+        <div class="hbox" style="background:var(--blue-dim);border:1px solid var(--blue-border);margin-top:10px">
+          <div class="hbox-title" style="color:var(--blue)">每个效果必须配的内容</div>
+          <div class="hbox-body" style="color:#93c5fd">① Before/After 截图或 GIF  ② 100–200 字技术说明（原理是什么 + 遇到什么问题 + 怎么解决的）。这两个是让你的作品集和别人拉开差距的关键——大多数人只有效果没有说明。</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">引擎向底座（穿插在整个 Demo 里）</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--purple)"></div><div>用 Queue 实现对象池，管理场景里的粒子特效（配合 Shader 效果展示，复用而不是 Instantiate/Destroy）</div></div>
+          <div class="item"><div class="dot" style="background:var(--purple)"></div><div>ScriptableObject 配一份简单数据表（比如场景里几个可交互对象的参数），UI 上读取并显示——把数据驱动的概念真正用一次</div></div>
+        </div>
+        <div class="hbox" style="background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.22);margin-top:10px">
+          <div class="hbox-title" style="color:var(--purple)">Addressables 放哪里</div>
+          <div class="hbox-body" style="color:#c4b5fd">Addressables 是好东西，但学习曲线陡、配置繁琐，作为第二个项目的底座风险太高。等两个项目都做完、对异步加载有感觉之后，可以在第三个项目或迭代阶段加进来。</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">参考资料</div>
+        <div class="res-grid">
+          <a class="res-card" href="https://dribbble.com/search/game-ui" target="_blank">
+            <div class="res-card-top"><span class="res-icon">🎨</span><span class="res-name">Dribbble · game ui</span></div>
+            <div class="res-desc">找 UI 设计稿参考，搜 "dark game ui" "rpg hud" "mobile game ui"</div>
+            <span class="res-tag" style="background:var(--amber-dim);color:var(--amber)">设计参考</span>
+          </a>
+          <a class="res-card" href="https://www.ui.cn" target="_blank">
+            <div class="res-card-top"><span class="res-icon">🇨🇳</span><span class="res-name">UI 中国</span></div>
+            <div class="res-desc">国内设计社区，游戏 UI 分类，中文找参考更方便</div>
+            <span class="res-tag" style="background:var(--amber-dim);color:var(--amber)">设计参考</span>
+          </a>
+          <a class="res-card" href="https://github.com/Siccity/xNode" target="_blank">
+            <div class="res-card-top"><span class="res-icon">🔧</span><span class="res-name">DOTween 文档</span></div>
+            <div class="res-desc">搜 "DOTween documentation"，UI 动画部分，Sequence 和 Ease 类型</div>
+            <span class="res-tag" style="background:var(--green-dim);color:var(--green)">工具文档</span>
+          </a>
+          <a class="res-card" href="https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@latest" target="_blank">
+            <div class="res-card-top"><span class="res-icon">📄</span><span class="res-name">URP 官方文档</span></div>
+            <div class="res-desc">RenderFeature 和 ScriptableRenderPass 的写法，做 Bloom 必看</div>
+            <span class="res-tag" style="background:var(--purple-dim);color:var(--purple)">官方文档</span>
+          </a>
+          <a class="res-card" href="https://roystan.net/articles/" target="_blank">
+            <div class="res-card-top"><span class="res-icon">✍️</span><span class="res-name">Roystan · Shader 教程</span></div>
+            <div class="res-desc">卡通渲染、描边、扫描线等效果教程，质量很高，英文有图</div>
+            <span class="res-tag" style="background:var(--blue-dim);color:var(--blue)">教程</span>
+          </a>
+          <a class="res-card" href="https://www.patreon.com/minionsart" target="_blank">
+            <div class="res-card-top"><span class="res-icon">🎓</span><span class="res-name">MinionsArt · Shader 教程</span></div>
+            <div class="res-desc">Unity Shader 效果教程，溶解、水面、扭曲都有，免费部分够用</div>
+            <span class="res-tag" style="background:var(--blue-dim);color:var(--blue)">教程</span>
+          </a>
+          <a class="res-card" href="https://github.com/nicloay/Node-Inspector" target="_blank">
+            <div class="res-card-top"><span class="res-icon">🔧</span><span class="res-name">URP RenderFeature 示例</span></div>
+            <div class="res-desc">GitHub 搜 "URP RenderFeature example"，看别人怎么插入自定义 Pass</div>
+            <span class="res-tag" style="background:var(--green-dim);color:var(--green)">源码参考</span>
+          </a>
+          <a class="res-card" href="https://catlikecoding.com/unity/tutorials/flow/" target="_blank">
+            <div class="res-card-top"><span class="res-icon">🐱</span><span class="res-name">Catlike Coding · Flow</span></div>
+            <div class="res-desc">水面、流动效果教程，数学解释非常详细</div>
+            <span class="res-tag" style="background:var(--blue-dim);color:var(--blue)">深度参考</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="deliverable">
+          <div class="deliverable-label">完成标准</div>
+          <div class="deliverable-items">
+            <div class="deliverable-item"><span class="check">✓</span>Demo 能跑，有 UI 流程、有 Shader 效果在场景里展示</div>
+            <div class="deliverable-item"><span class="check">✓</span>GitHub README 顶部有 GIF 或视频，3 个 Shader 各有 before/after 截图和技术说明</div>
+            <div class="deliverable-item"><span class="check">✓</span>UI 设计来源注明，UIManager + EventBus + DOTween 动画实现部分说清楚</div>
+            <div class="deliverable-item"><span class="check">✓</span>能讲清楚：UI 框架的设计决策 + 3 个 Shader 的原理 + 对象池为什么用 Queue</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin:0 0 16px;padding:12px 18px;background:linear-gradient(90deg,rgba(251,191,36,0.08),transparent);border-left:3px solid var(--amber);border-radius:0 var(--radius-sm) var(--radius-sm) 0">
+    <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--amber);margin-bottom:4px">阶段4结束后，你的位置</div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.65">两个项目都有，覆盖引擎、UI程序、渲染三个维度。简历上能写的技术点：Editor扩展、UIManager设计、MVP数据绑定、描边/溶解/PBR Shader。对标岗位：UI程序实习、TA偏程序侧实习、工具开发实习。<strong>范围已收窄，完整交付优先于功能丰富</strong>——这个阶段结束是正式大规模投递的时机。</div>
+  </div>
+
+  <!-- 阶段5 -->
+  <div class="phase" id="ph5">
+    <div class="phase-head" onclick="tog('ph5')">
+      <div class="phase-badge" style="background:var(--red-dim);color:var(--red)">05</div>
+      <div class="phase-meta">
+        <div class="phase-title">投简历 · 面试冲刺</div>
+        <div class="phase-desc">第 27 周起 · 从中厂开始，拿真实反馈</div>
+      </div>
+      <div class="phase-tags">
+        <span class="tag" style="color:var(--red);border-color:rgba(248,113,113,0.3);background:var(--red-dim)">目标节点</span>
+      </div>
+      <span class="chevron" id="ph5-c">›</span>
+    </div>
+    <div class="phase-body" id="ph5-b">
+      <div class="section">
+        <div class="section-label">投递顺序</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--red)"></div><div><strong>第一轮（校准期）：</strong>心动、游族、三七、4399、叠纸——拿真实面试反馈，记录每次被问住的问题</div></div>
+          <div class="item"><div class="dot" style="background:var(--red)"></div><div><strong>第二轮（冲刺期）：</strong>莉莉丝、鹰角、米哈游——这时候你有两个项目 + 面试经验了</div></div>
+          <div class="item"><div class="dot" style="background:var(--red)"></div><div><strong>第三轮（目标期）：</strong>腾讯（无笔试）、网易、字节——把这些当努力方向，不当唯一出路</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-label">面试前准备</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--muted)"></div><div>把阶段1里写的"自己话总结"重新过一遍，这就是你的理论复习材料</div></div>
+          <div class="item"><div class="dot" style="background:var(--muted)"></div><div>对每个项目准备 3 分钟的介绍：动机 → 技术方案 → 遇到的最难的问题 → 如果重做会改什么</div></div>
+          <div class="item"><div class="dot" style="background:var(--muted)"></div><div>每次面完当天写复盘：哪个问题答得不好、为什么、下次怎么答</div></div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-label">简历和 GitHub 要做的事</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--muted)"></div><div>GitHub 两个项目的 README 要在手机上看着也清楚——很多面试官会在面前直接打开你的 GitHub</div></div>
+          <div class="item"><div class="dot" style="background:var(--muted)"></div><div>简历项目描述：不写"做了 XX 系统"，写"用 XX 技术解决了 XX 问题，结果是 XX"</div></div>
+          <div class="item"><div class="dot" style="background:var(--muted)"></div><div>腾讯实习申请入口：<a href="https://join.qq.com" target="_blank">join.qq.com</a>；网易：<a href="https://campus.163.com" target="_blank">campus.163.com</a>；字节：<a href="https://jobs.bytedance.com/campus" target="_blank">jobs.bytedance.com/campus</a></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:32px;padding:16px 20px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius)">
+    <div style="font-size:12px;font-weight:600;color:var(--muted);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:8px">一句话记住的核心逻辑</div>
+    <div style="font-size:14px;color:var(--text);line-height:1.7">两个项目，一个展示你能解决工程问题（编辑器工具），一个展示你有技术深度（UI+渲染 Demo）。三个方向不是三倍工作量，是同一个 Demo 的三个维度。UI 设计稿用网上现成的完全没问题，程序实现部分才是面试官看的东西。</div>
+  </div>
+
+</div>
+
+
+<!-- DIVIDER -->
+<div style="margin-top:64px;padding-top:48px;border-top:2px solid var(--border2)">
+    
+<div class="page">
+
+  <div class="hero-label">路线附加安排</div>
+  <div class="hero-title">算法 + 代码基础</div>
+  <div class="hero-sub">穿插在主路线里，不单独占整块时间。这份文档只看这两块，主路线不重复。</div>
+
+  <!-- 时间说明 -->
+  <div class="time-grid">
+    <div class="time-card">
+      <div class="time-card-title" style="color:var(--teal)">⏱ 碎片时间能干的事</div>
+      <div class="time-row"><span class="time-tag" style="background:var(--teal-dim);color:var(--teal)">15–30min</span><span>刷一道 LeetCode 简单题；看一个概念的定义和例子；复习昨天写的总结</span></div>
+      <div class="time-row"><span class="time-tag" style="background:var(--teal-dim);color:var(--teal)">30–45min</span><span>刷一道中等题（包括看题解理解思路）；把一个代码基础概念的示例代码跑一遍</span></div>
+      <div style="margin-top:10px;font-size:12px;color:var(--faint)">适合：上下课途中、吃饭、睡前。手机上 LeetCode App 直接刷，不需要开电脑。</div>
+    </div>
+    <div class="time-card">
+      <div class="time-card-title" style="color:var(--amber)">🧱 整块时间干的事</div>
+      <div class="time-row"><span class="time-tag" style="background:var(--amber-dim);color:var(--amber)">1–2h</span><span>把一个代码基础模块系统过一遍并写测试代码（如：把委托/事件整套写一遍）</span></div>
+      <div class="time-row"><span class="time-tag" style="background:var(--amber-dim);color:var(--amber)">2–3h</span><span>主路线项目推进（整块时间才能进状态，碎片时间做项目基本白做）</span></div>
+      <div style="margin-top:10px;font-size:12px;color:var(--faint)">整块时间优先给项目，算法和代码基础尽量塞碎片时间，不抢项目的整块。</div>
+    </div>
+  </div>
+
+  <!-- 算法部分 -->
+  <div class="sec-header">
+    <div class="sec-dot" style="background:var(--purple)"></div>
+    <div class="sec-title">算法安排</div>
+    <div class="sec-sub">每周 3 题，碎片时间完成</div>
+  </div>
+
+  <div class="phase" id="a1">
+    <div class="ph-head" onclick="tog('a1')">
+      <div class="ph-num" style="background:var(--purple-dim);color:var(--purple)">A1</div>
+      <div class="ph-info"><div class="ph-title">游戏客户端算法考察范围</div><div class="ph-sub">先知道考什么，再决定练什么</div></div>
+      <span class="chev" id="a1-c">›</span>
+    </div>
+    <div class="ph-body" id="a1-b">
+      <div class="inner">
+        <div class="label">各厂实际考察分布（客户端方向）</div>
+        <table class="link-table">
+          <tr><th>考察频率</th><th>题型</th><th>说明</th></tr>
+          <tr><td>★★★ 必考</td><td>数组、字符串、哈希表</td><td>几乎每家都有，简单到中等</td></tr>
+          <tr><td>★★★ 必考</td><td>链表基础操作</td><td>反转、合并、判断环——手写频率高</td></tr>
+          <tr><td>★★☆ 常考</td><td>二叉树遍历（BFS/DFS）</td><td>和 Hierarchy 树形结构直接相关</td></tr>
+          <tr><td>★★☆ 常考</td><td>栈和队列</td><td>括号匹配、滑动窗口等</td></tr>
+          <tr><td>★☆☆ 偶尔</td><td>简单动态规划</td><td>网易/字节偶尔考，腾讯游戏部门很少</td></tr>
+          <tr><td>✗ 基本不考</td><td>图论、复杂DP、数学题</td><td>后端和基础架构方向才有</td></tr>
+        </table>
+        <div class="hbox" style="background:var(--purple-dim);border:1px solid var(--purple-b)">
+          <div class="hbox-t" style="color:var(--purple)">结论</div>
+          <div class="hbox-b" style="color:#c4b5fd">你现在中等题有时候能做，说明上表里★★★的部分基本覆盖了。重点是把"有时候能做"变成"稳定能做"，而不是去啃困难题。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase" id="a2">
+    <div class="ph-head" onclick="tog('a2')">
+      <div class="ph-num" style="background:var(--purple-dim);color:var(--purple)">A2</div>
+      <div class="ph-info"><div class="ph-title">每周节奏 · 3 题固定安排</div><div class="ph-sub">不按天排，按每周出量</div></div>
+      <span class="chev" id="a2-c">›</span>
+    </div>
+    <div class="ph-body" id="a2-b">
+      <div class="inner">
+        <div class="label">每周 3 题的组合</div>
+        <div class="week-row"><span class="week-label" style="background:var(--teal-dim);color:var(--teal)">题1</span><span class="week-content"><strong style="color:var(--text)">简单题 1 道</strong>——5–10分钟内做完，保持手感。做完了看一眼别人的写法，有没有更简洁的。</span></div>
+        <div class="week-row"><span class="week-label" style="background:var(--amber-dim);color:var(--amber)">题2</span><span class="week-content"><strong style="color:var(--text)">中等题 1 道（独立做）</strong>——给自己 20 分钟，做不出来不要死磕，看题解，然后自己重新写一遍，不要照抄。</span></div>
+        <div class="week-row"><span class="week-label" style="background:var(--amber-dim);color:var(--amber)">题3</span><span class="week-content"><strong style="color:var(--text)">中等题 1 道（同类型）</strong>——和题2同一个类型，验证自己真的会了还是只是看懂了别人的。</span></div>
+        <div class="hbox" style="background:var(--bg3);border:1px solid var(--border);margin-top:12px">
+          <div class="hbox-t" style="color:var(--muted)">关于"做不出来要不要看题解"</div>
+          <div class="hbox-b" style="color:var(--muted)">超过 20 分钟没思路就看，不要死磕。但看完之后必须合上题解自己重写一遍——这步不做，看再多题解都是白看。</div>
+        </div>
+      </div>
+      <div class="inner">
+        <div class="label">按主路线阶段推荐的练习重点</div>
+        <table class="link-table">
+          <tr><th>主路线阶段</th><th>对应刷题重点</th><th>原因</th></tr>
+          <tr><td>阶段1–2（地基）</td><td>数组、哈希表、字符串</td><td>基础最稳，先把必考的做扎实</td></tr>
+          <tr><td>阶段3（编辑器工具）</td><td>二叉树遍历、递归</td><td>Hierarchy 本身是树，做项目时直接用得上</td></tr>
+          <tr><td>阶段4（UI+渲染Demo）</td><td>链表、栈和队列</td><td>UI 面板栈、对象池队列，和项目直接对应</td></tr>
+          <tr><td>阶段5（投简历前）</td><td>回顾错题 + 简单DP入门</td><td>冲刺网易/字节时多一个保险</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase" id="a3">
+    <div class="ph-head" onclick="tog('a3')">
+      <div class="ph-num" style="background:var(--purple-dim);color:var(--purple)">A3</div>
+      <div class="ph-info"><div class="ph-title">刷题资源</div><div class="ph-sub">不需要全部用，选一个主平台就够</div></div>
+      <span class="chev" id="a3-c">›</span>
+    </div>
+    <div class="ph-body" id="a3-b">
+      <div class="inner">
+        <div class="res-grid">
+          <a class="res-card" href="https://leetcode.cn" target="_blank">
+            <div class="res-name">LeetCode 中文版</div>
+            <div class="res-desc">主平台，题库最全，手机 App 碎片时间刷，推荐用"按标签刷"而不是按题号顺序</div>
+            <span class="res-tag" style="background:var(--purple-dim);color:var(--purple)">主平台</span>
+          </a>
+          <a class="res-card" href="https://leetcode.cn/studyplan/top-100-liked/" target="_blank">
+            <div class="res-name">LeetCode 热题 100</div>
+            <div class="res-desc">官方整理的高频题单，客户端方向把前 60 道做完基本够用</div>
+            <span class="res-tag" style="background:var(--teal-dim);color:var(--teal)">推荐题单</span>
+          </a>
+          <a class="res-card" href="https://www.bilibili.com/video/BV1eg411w7Gy" target="_blank">
+            <div class="res-name">代码随想录（B站）</div>
+            <div class="res-desc">中文讲解，按专题分类，链表/树/动态规划讲得很清楚，卡住了看视频比看题解好懂</div>
+            <span class="res-tag" style="background:var(--amber-dim);color:var(--amber)">视频讲解</span>
+          </a>
+          <a class="res-card" href="https://programmercarl.com" target="_blank">
+            <div class="res-name">代码随想录（网站版）</div>
+            <div class="res-desc">配套图文版，和 B 站视频是同一个系列，文字版查起来更快</div>
+            <span class="res-tag" style="background:var(--amber-dim);color:var(--amber)">图文版</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 代码基础部分 -->
+  <div class="sec-header" style="margin-top:36px">
+    <div class="sec-dot" style="background:var(--amber)"></div>
+    <div class="sec-title">代码基础安排</div>
+    <div class="sec-sub">开始项目前补完，之后按需查</div>
+  </div>
+
+  <div class="phase" id="c1">
+    <div class="ph-head" onclick="tog('c1')">
+      <div class="ph-num" style="background:var(--amber-dim);color:var(--amber)">C1</div>
+      <div class="ph-info"><div class="ph-title">开始项目前必须补完的三个概念</div><div class="ph-sub">第5–8周穿插完成，第9周前全部过完 · 每个 1 个整块时间（1–2h），写代码验证，不要只看</div></div>
+      <span class="chev" id="c1-c">›</span>
+    </div>
+    <div class="ph-body" id="c1-b">
+      <div class="inner">
+        <div class="label">① 委托与事件（最优先）</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--amber)"></div><div>要搞清楚的：<code>Action</code>/<code>Func</code>/<code>delegate</code> 的区别，<code>event</code> 关键字加不加有什么不同，多播委托是什么</div></div>
+          <div class="item"><div class="dot" style="background:var(--amber)"></div><div>为什么优先：你的事件系统、UI框架的数据绑定、Buff 触发全都靠这套，不懂这个后面项目会一直卡</div></div>
+          <div class="item"><div class="dot" style="background:var(--amber)"></div><div>验证方式：自己写一个"玩家血量变化时通知 UI 更新"的小 demo，不用 Unity，控制台程序就够</div></div>
+        </div>
+        <div class="hbox" style="background:var(--amber-dim);border:1px solid var(--amber-b);margin-top:10px">
+          <div class="hbox-t" style="color:var(--amber)">读源码的直接关联</div>
+          <div class="hbox-b" style="color:#d4b96a">QFramework 的 EventSystem、Unity 的 UnityEvent 都是基于这套机制。不懂委托，看这些源码会完全不知道数据怎么流动。</div>
+        </div>
+      </div>
+      <div class="inner">
+        <div class="label">② 泛型（Generic）</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--amber)"></div><div>要搞清楚的：<code>List&lt;T&gt;</code>/<code>Dictionary&lt;K,V&gt;</code>/<code>Queue&lt;T&gt;</code> 为什么这样写，自己写一个泛型类（如 <code>ObjectPool&lt;T&gt;</code>）</div></div>
+          <div class="item"><div class="dot" style="background:var(--amber)"></div><div>泛型约束：<code>where T : Component</code> 是什么意思，什么时候需要加约束</div></div>
+          <div class="item"><div class="dot" style="background:var(--amber)"></div><div>验证方式：自己写一个 <code>ObjectPool&lt;T&gt;</code>，能对任意 MonoBehaviour 子类复用</div></div>
+        </div>
+        <div class="hbox" style="background:var(--amber-dim);border:1px solid var(--amber-b);margin-top:10px">
+          <div class="hbox-t" style="color:var(--amber)">读源码的直接关联</div>
+          <div class="hbox-b" style="color:#d4b96a">QFramework 的 ObjectPool、UIManager 大量使用泛型。不懂泛型，看到 <code>Spawn&lt;T&gt;</code> 这类代码就会懵。</div>
+        </div>
+      </div>
+      <div class="inner">
+        <div class="label">③ 继承 vs 接口 vs 组合，什么时候用哪个</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--amber)"></div><div>要搞清楚的：<code>abstract class</code> 和 <code>interface</code> 的本质区别，"组合优于继承"是什么意思，<code>virtual</code>/<code>override</code>/<code>sealed</code> 各是什么</div></div>
+          <div class="item"><div class="dot" style="background:var(--amber)"></div><div>验证方式：用三种方式都实现一遍 Buff 系统，感受为什么数据驱动比子类继承更合理</div></div>
+          <div class="item"><div class="dot" style="background:var(--amber)"></div><div>为什么重要：这是你测评里 Buff 系统被点出来的核心问题，也是面试里设计类问题的底层逻辑</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase" id="c2">
+    <div class="ph-head" onclick="tog('c2')">
+      <div class="ph-num" style="background:var(--amber-dim);color:var(--amber)">C2</div>
+      <div class="ph-info"><div class="ph-title">做项目过程中按需补的内容</div><div class="ph-sub">遇到了再补，不用提前学</div></div>
+      <span class="chev" id="c2-c">›</span>
+    </div>
+    <div class="ph-body" id="c2-b">
+      <div class="inner">
+        <table class="link-table">
+          <tr><th>遇到什么情况</th><th>去补什么</th></tr>
+          <tr><td>写 UIManager 时不知道怎么管生命周期</td><td>C# 的 IDisposable 接口 + using 语句，理解"用完就释放"的模式</td></tr>
+          <tr><td>写事件系统时发现内存泄漏</td><td>弱引用（WeakReference）是什么，什么时候用；更实用的是理解为什么要在 OnDisable 里取消订阅</td></tr>
+          <tr><td>读 QFramework 源码看到 Singleton&lt;T&gt;</td><td>单例模式的几种写法，以及为什么 Unity 里的单例要特别处理 DontDestroyOnLoad</td></tr>
+          <tr><td>写 Addressables 异步加载时不知道怎么处理回调</td><td>C# async/await 和 Task，Unity 里的协程 vs async 的区别</td></tr>
+          <tr><td>写 Shader 时看不懂 HLSL 里的矩阵运算</td><td>不是代码基础问题，去看 LearnOpenGL 对应章节</td></tr>
+          <tr><td>读 Unity C# 源码时看到 ref/out/in</td><td>C# 参数修饰符，ref 和 out 的区别，in 是什么</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase" id="c3">
+    <div class="ph-head" onclick="tog('c3')">
+      <div class="ph-num" style="background:var(--amber-dim);color:var(--amber)">C3</div>
+      <div class="ph-info"><div class="ph-title">代码基础学习资源</div><div class="ph-sub">不需要全看，按需查</div></div>
+      <span class="chev" id="c3-c">›</span>
+    </div>
+    <div class="ph-body" id="c3-b">
+      <div class="inner">
+        <div class="res-grid">
+          <a class="res-card" href="https://learn.microsoft.com/zh-cn/dotnet/csharp/tour-of-csharp/" target="_blank">
+            <div class="res-name">微软 C# 官方文档（中文）</div>
+            <div class="res-desc">委托、泛型、接口、async/await 都有详细说明，当工具书查比读书快</div>
+            <span class="res-tag" style="background:var(--blue-dim);color:var(--blue)">工具书</span>
+          </a>
+          <a class="res-card" href="https://www.runoob.com/csharp/csharp-tutorial.html" target="_blank">
+            <div class="res-name">菜鸟教程 C#</div>
+            <div class="res-desc">中文，概念解释简短直接，适合快速查"这个语法是什么"</div>
+            <span class="res-tag" style="background:var(--teal-dim);color:var(--teal)">快速查</span>
+          </a>
+          <a class="res-card" href="https://refactoring.guru/zh/design-patterns/csharp" target="_blank">
+            <div class="res-name">Refactoring Guru · C# 设计模式</div>
+            <div class="res-desc">单例、观察者、工厂、策略的 C# 实现，配图清楚，看懂一个就能用</div>
+            <span class="res-tag" style="background:var(--amber-dim);color:var(--amber)">设计模式</span>
+          </a>
+          <a class="res-card" href="https://www.bilibili.com/video/BV1FJ411W7e5" target="_blank">
+            <div class="res-name">Unity C# 委托与事件（B站）</div>
+            <div class="res-desc">中文视频，专门讲 Unity 场景下的委托/事件用法，比文档好理解</div>
+            <span class="res-tag" style="background:var(--amber-dim);color:var(--amber)">视频</span>
+          </a>
+          <a class="res-card" href="https://github.com/Unity-Technologies/UnityCsReference" target="_blank">
+            <div class="res-name">Unity C# 源码</div>
+            <div class="res-desc">想看 Unity 自己怎么实现某个功能时来这里，搜对应类名</div>
+            <span class="res-tag" style="background:var(--green-dim);color:var(--green)">源码参考</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C++ -->
+  <div class="sec-header" style="margin-top:36px">
+    <div class="sec-dot" style="background:var(--red)"></div>
+    <div class="sec-title">C++ 核心概念</div>
+    <div class="sec-sub">阶段4之后 · 2–3 周集中过完</div>
+  </div>
+
+  <div class="phase" id="cpp1">
+    <div class="ph-head" onclick="tog('cpp1')">
+      <div class="ph-num" style="background:var(--red-dim);color:var(--red)">C+</div>
+      <div class="ph-info"><div class="ph-title">为什么要学、学到什么程度</div><div class="ph-sub">现在不用动，作品集#2做完后再开始</div></div>
+      <span class="chev" id="cpp1-c">›</span>
+    </div>
+    <div class="ph-body" id="cpp1-b">
+      <div class="inner">
+        <div class="label">为什么要学</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--red)"></div><div>技术面会问C++概念——即使你做Unity开发，面试官也可能问指针、内存管理、虚函数，因为这些反映你对底层的理解深度</div></div>
+          <div class="item"><div class="dot" style="background:var(--red)"></div><div>引擎底层是C++——想真正理解Unity/UE的引擎机制，绕不开C++；Shader的HLSL也和C++有语法渊源</div></div>
+          <div class="item"><div class="dot" style="background:var(--red)"></div><div>手机方向会涉及——你提到对Android/手机方向有兴趣，NDK开发需要C++</div></div>
+        </div>
+        <div class="hbox" style="background:var(--red-dim);border:1px solid rgba(248,113,113,0.25);margin-top:10px">
+          <div class="hbox-t" style="color:var(--red)">学到什么程度</div>
+          <div class="hbox-b" style="color:#fca5a5">不需要做C++项目，不需要刷C++算法题。目标是：<strong>能读懂C++代码、能回答面试里的C++概念题</strong>。有C#基础的人2–3周能达到这个程度。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase" id="cpp2">
+    <div class="ph-head" onclick="tog('cpp2')">
+      <div class="ph-num" style="background:var(--red-dim);color:var(--red)">C+</div>
+      <div class="ph-info"><div class="ph-title">必须搞懂的五个概念</div><div class="ph-sub">每个用半个整块时间（1h）过完，写代码验证</div></div>
+      <span class="chev" id="cpp2-c">›</span>
+    </div>
+    <div class="ph-body" id="cpp2-b">
+      <div class="inner">
+        <div class="label">① 指针与引用</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--red)"></div><div>指针是什么、引用是什么、两者区别；<code>*</code>/<code>&</code> 符号在不同位置的含义；为什么C++要手动管理内存</div></div>
+          <div class="item"><div class="dot" style="background:var(--red)"></div><div>对比C#：C#的<code>ref</code>参数 ≈ C++引用；C#的对象默认是引用类型 ≈ C++指针传参</div></div>
+        </div>
+      </div>
+      <div class="inner">
+        <div class="label">② 堆与栈内存</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--red)"></div><div>栈上分配（局部变量）vs 堆上分配（<code>new</code>）的区别；为什么栈快、堆慢；内存泄漏怎么产生</div></div>
+          <div class="item"><div class="dot" style="background:var(--red)"></div><div>对比C#：C#的GC自动管理堆内存，C++要手动<code>delete</code>——这就是为什么C++性能更可控但更危险</div></div>
+        </div>
+      </div>
+      <div class="inner">
+        <div class="label">③ 智能指针</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--red)"></div><div><code>unique_ptr</code>/<code>shared_ptr</code>/<code>weak_ptr</code> 各是什么、什么时候用哪个；RAII是什么思想</div></div>
+          <div class="item"><div class="dot" style="background:var(--red)"></div><div>对比C#：<code>shared_ptr</code> ≈ C#的普通对象引用计数；<code>weak_ptr</code> ≈ C#的<code>WeakReference</code></div></div>
+        </div>
+      </div>
+      <div class="inner">
+        <div class="label">④ 虚函数与虚函数表</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--red)"></div><div><code>virtual</code> 关键字是什么；虚函数表（vtable）的原理；纯虚函数（抽象类）vs 接口</div></div>
+          <div class="item"><div class="dot" style="background:var(--red)"></div><div>对比C#：C++的<code>virtual</code> ≈ C#的<code>virtual</code>；C++纯虚函数 ≈ C#的<code>abstract</code>方法；C++没有<code>interface</code>关键字但可以用纯虚类模拟</div></div>
+        </div>
+      </div>
+      <div class="inner">
+        <div class="label">⑤ 编译模型（.h/.cpp 分离）</div>
+        <div class="items">
+          <div class="item"><div class="dot" style="background:var(--red)"></div><div>头文件和实现文件为什么要分开；<code>#include</code>/<code>#pragma once</code> 是什么；能读懂UE的C++代码结构</div></div>
+          <div class="item"><div class="dot" style="background:var(--red)"></div><div>这个不用深学，能看懂别人的代码结构就够，面试几乎不考这个细节</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase" id="cpp3">
+    <div class="ph-head" onclick="tog('cpp3')">
+      <div class="ph-num" style="background:var(--red-dim);color:var(--red)">C+</div>
+      <div class="ph-info"><div class="ph-title">学习资源</div><div class="ph-sub">有C#基础，这些资源2–3周够用</div></div>
+      <span class="chev" id="cpp3-c">›</span>
+    </div>
+    <div class="ph-body" id="cpp3-b">
+      <div class="inner">
+        <div class="res-grid">
+          <a class="res-card" href="https://learncpp.com" target="_blank">
+            <div class="res-name">learncpp.com</div>
+            <div class="res-desc">最好的C++入门网站，章节清晰，有C#基础只需要看指针、内存、虚函数这几章，不用从头读</div>
+            <span class="res-tag" style="background:var(--red-dim);color:var(--red)">主平台</span>
+          </a>
+          <a class="res-card" href="https://www.bilibili.com/video/BV1Ps4y1n7Yo" target="_blank">
+            <div class="res-name">C++ 面试高频考点（B站）</div>
+            <div class="res-desc">专门针对面试的C++概念讲解，中文，直接命中你需要的内容，不用系统学完整C++</div>
+            <span class="res-tag" style="background:var(--amber-dim);color:var(--amber)">视频</span>
+          </a>
+          <a class="res-card" href="https://en.cppreference.com/w/" target="_blank">
+            <div class="res-name">cppreference.com</div>
+            <div class="res-desc">C++标准库工具书，遇到不认识的语法来这里查，比任何教程都准确</div>
+            <span class="res-tag" style="background:var(--blue-dim);color:var(--blue)">工具书</span>
+          </a>
+          <a class="res-card" href="https://github.com/EpicGames/UnrealEngine" target="_blank">
+            <div class="res-name">UE 源码（参考）</div>
+            <div class="res-desc">学完基础后去看UE的Actor/Component结构，感受真实游戏引擎里C++的写法风格</div>
+            <span class="res-tag" style="background:var(--green-dim);color:var(--green)">源码参考</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 总结 -->
+  <div style="margin-top:32px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--faint);margin-bottom:10px">三块内容的节奏总结</div>
+    <div class="week-row"><span class="week-label" style="background:var(--purple-dim);color:var(--purple)">算法</span><span class="week-content"><strong>第1周起一直到投简历前</strong>，每周 3 题（简单×1 + 中等×2），碎片时间完成。按阶段切换刷题重点，和项目内容对应。投简历前两周加量到每天 1 题做热身。</span></div>
+    <div class="week-row" style="margin-top:8px"><span class="week-label" style="background:var(--amber-dim);color:var(--amber)">代码基础</span><span class="week-content"><strong>第5–8周（主路线阶段2，图形学数学期间）</strong>穿插完成——这段时间不需要大整块写项目，空出来的整块时间用来过三个概念。每个概念 1 个整块（1–2h），写代码验证，不要只看。第9周开始做项目之前必须全部过完。之后遇到不懂的按需查，不提前学。</span></div>
+    <div class="week-row" style="margin-top:8px"><span class="week-label" style="background:var(--red-dim);color:var(--red)">C++</span><span class="week-content"><strong>阶段4（作品集#2）完成后</strong>，集中2–3周过完五个核心概念（指针/内存/智能指针/虚函数/编译模型）。有C#基础对比着学，每个概念1小时整块时间够用。目标是能读懂C++代码、能答面试概念题，不需要做C++项目。</span></div>
+  </div>
+
+</div>
+<script>
+function tog(id) {
+  var b = document.getElementById(id+'-b');
+  var c = document.getElementById(id+'-c');
+  var open = b.classList.contains('open');
+  b.classList.toggle('open', !open);
+  c.style.transform = open ? '' : 'rotate(90deg)';
+}
+</script>
+
+  </div>
+
+</body>
+</html>
