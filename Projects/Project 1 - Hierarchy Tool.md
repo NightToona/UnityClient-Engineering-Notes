@@ -9,16 +9,18 @@
 **避免**：Unity  ↔  Rider  频繁切换查看信息。  
   
 同时借此理解：  
-- Unity Editor扩展 
-- Scene / Hierarchy / Transform 
-- Editor生命周期 
-- TCP通信 
-- 自定义数据协议 
-- Rider插件开发
+- Unity Editor扩展开发
+- 游戏开发工具链
+- 跨进程通信
+- 自定义协议设计
+- IDE插件开发
+- 多语言技术迁移能力
   
 ---  
 ## 当前架构  
-  
+
+#### Unity Editor
+
 HierarchyWindow  
 │  
 ├─ IDEHierarchySetting
@@ -30,19 +32,66 @@ HierarchyWindow
 
 **流程**：
 
-Hierarchy变化
-↓
-HierarchyExporter
-↓
-HierarchyData
-↓
-XmlSerializer
-↓
-TcpServer
-↓
-Rider Plugin  
+```mermaid
+flowchart LR
+
+A[Hierarchy变化]
+--> B[HierarchyExporter]
+--> C[HierarchyData]
+--> D[XmlSerializer]
+--> E[TcpServer]
+--> F[Rider Plugin]
+```
+
+#### Rider Plugin
+
+Kotlin Client
+│  
+├─ network
+│ ├─ HierarchyTcpClient
+│ └─ MessageType
+│
+├─ parser
+│ └─ XmlParse
+│
+└─ MyToolWindowFactory
   
 ---  
+## 数据流程
+
+```mermaid
+flowchart LR
+
+subgraph Unity Editor
+    A[Hierarchy变化]
+    B[HierarchyExporter]
+    C[HierarchyData]
+    D[XmlSerializer]
+    E[Protocol Layer]
+    F[TcpServer]
+
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+end
+
+F --> G[TCP通信]
+
+subgraph Rider Plugin
+    H[Kotlin Client]
+    I[XML反序列化]
+    J[Hierarchy Tree展示]
+
+    H --> I
+    I --> J
+end
+
+G --> H
+```
+
+---
 ## 已解决的问题  
 
 
@@ -59,7 +108,13 @@ Rider Plugin
 - [x] TCP基础消息协议设计
 - [x] UTF-8 / UTF-16编码问题排查
 - [x] TCP基础通信流程完善
+- [x] Kotlin TCP Client实现
+- [x] TCP自动重连机制
+- [x] 心跳消息通信
+- [x] TCP模块整体闭环
+- [x] XML反序列化输出
 - [ ] 
+
 
 ---  
 ## 当前问题  
@@ -67,10 +122,6 @@ Rider Plugin
 **Rider Plugin**
 - [ ] Rider侧树形显示  
 - [ ] Kotlin插件编写
-
-**TCP通信完善**
-- [ ] TCP消息解析
-- [ ] 心跳机制完善
 
 **工具优化**
 - [ ] 性能优化  
@@ -130,7 +181,7 @@ IDEHierarchySetting
 （引路：[[静态变量初始化生命周期问题]]）
   
 ---  
-### V2（几乎完成）
+### V2（已完成）
   
 拆分为三部分：
 
@@ -161,7 +212,7 @@ IDEHierarchySetting
 - 初始化顺序不可控问题
   
 ---
-## 后续 V3 规划
+## V3 （当前方向）
 
 ```
 HierarchyExporter
@@ -203,6 +254,13 @@ Rider Plugin
 - using三种用法
 - async Task 生命周期与任务管理
 
+#### Kotlin（快速学习）
+- Kotlin基础语法
+- Coroutine协程使用
+- Dispatchers IO线程调度
+- Mutex并发控制
+- Socket网络编程
+
 
 #### 网络通信
 - TCP连接建立与关闭流程（三次握手 / 四次挥手）
@@ -216,6 +274,7 @@ Rider Plugin
 - 状态机控制思想
 - 状态锁与线程锁区别
 - 通过状态管理程序生命周期
+- 模块职责划分
 
 ---
 ## 日记与周记
@@ -238,4 +297,4 @@ Rider Plugin
 - [[2026-07-27 周记]]
 - [[2026-07-27]]
 - [[2026-07-28]]
-- 
+- [[2026-07-29]]
