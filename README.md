@@ -1,6 +1,6 @@
 # 个人学习路线 | GameClient Engineering Notes
 
-![Status](https://img.shields.io/badge/status-KeepingUpdate-orange)
+![Status|136](https://img.shields.io/badge/status-Keeping%20Update-orange)
 
 这是我在游戏客户端方向学习与工程实践过程中的记录。
 
