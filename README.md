@@ -1,5 +1,7 @@
 # 个人学习路线 | GameClient Engineering Notes
 
+![Status](https://img.shields.io/badge/status-KeepingUpdate-orange)
+
 这是我在游戏客户端方向学习与工程实践过程中的记录。
 
 仓库包含：
