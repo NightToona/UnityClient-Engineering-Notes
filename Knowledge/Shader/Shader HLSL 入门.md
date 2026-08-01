@@ -50,6 +50,7 @@ float4 main(PSInput input) : SV_Target
 
 ![[Pasted image 20260331095208.png]]
 
+---
 ## T-32【Sin使用】
 
 > **原题目：**
@@ -93,6 +94,8 @@ float4 main(PSInput input) : SV_Target
 
 ![[Pasted image 20260403113734.jpg]]
 
+
+---
 ## T-33 【矢量归一化】（题目巨坑）
 
 > **原题目：**
@@ -196,6 +199,8 @@ float4 main(PSInput input) : SV_Target
 
 而对应的实际渲染效果那么就和前面给出的题目要求的案例演示相符，此处就不再将图片贴上去了。
 
+
+---
 ## T-34 【点】(找到T-33和本体的巨坑了)
 
 **不用说了，还是出现了同样的问题，当我们按照题目的标准以及心照不宣的代码中给出的归一化UV坐标的时候，我们从这一步就已经走进误区了，包括前面的那题也一样！**
@@ -267,6 +272,7 @@ float4 main(PSInput input) : SV_Target
 最后要感谢Discord上某位老哥提出来的解决方法：
 https://discord.com/channels/1193522220249653350/1193522220769742954/1451593650004955260
 
+---
 ## T-35 【钳制 - Clamp】
 
 很巧妙的一题，这一题基本上是只有两种情况，一个就是完全没想法或是做出来是错的，但是另一种就是完全做得出来，就先看看题目吧。
@@ -311,6 +317,7 @@ float4 main(PSInput input) : SV_Target
 
 ![[Pasted image 20260420193908.png]]
 
+--- 
 ## （二）贴图、三维及动画(函数混合使用)
 
 ## T-36 【Texture - 贴图】
@@ -382,7 +389,8 @@ float4 main(PSInput input) : SV_Target
 > 
 > **常见的解决方案**是：为了避免视觉不一致，开发者通常在GPU上传时将**图像垂直翻转**——要么在CPU内存中反转行顺序，要么使用自动处理的纹理加载库。这确保无论渲染语言使用何种坐标系，纹理都能正确呈现。
 
-## T-37 【镜像旋转】（6，纯数学题）
+---
+## T-37 【镜像旋转】（6…纯数学题）
 
 这题就纯粹让你思考到底如何将一个线性方向的坐标转化为有分布点指向性的结构，就像下图一样：
 
@@ -447,8 +455,9 @@ float4 main(PSInput input) : SV_Target
 
 最后的渲染效果图片：
 
-![[Pasted image 20260421100932.png]]
+![[Pasted image 20260421100932.png|616]]
 
+---
 ## T-38 【丢弃 - discard】（知识点）
 
 在 **HLSL**（High-Level Shading Language）中，`discard` 是一个在 **像素着色器（Pixel Shader）** 中使用的特殊语句，用来**丢弃当前片元（pixel/fragment）**，使它不再写入渲染目标（Render Target）或深度缓冲（Depth Buffer）。
@@ -464,6 +473,7 @@ float4 main(PSInput input) : SV_Target
 3. 过多使用 `discard` 可能影响性能，因为它会破坏 GPU 的早期深度测试（Early-Z）。
 4. 在某些硬件上，`clip()` 可能比 `discard` 更高效，因为它可以与 Early-Z 更好地配合。
 
+---
 ## T-40 【精灵动画 - Sprite Animation】
 
 挺有趣的，就是逻辑上面有点考验数学。先看看题吧：
@@ -518,8 +528,9 @@ float4 main(PSInput input) : SV_Target
 
 接下来是渲染的图片（因为是动图无法展示，自己gun去网站上看）：
 
-![[Pasted image 20260421144744.png]]
+![[Pasted image 20260421144744.png|568]]
 
+---
 ## T-41 （快门）径向遮罩【混合复习】
 
 首先来复习一下之前学过的所有API功能吧，不然太久不写也容易忘记：
@@ -602,7 +613,7 @@ float4 main(PSInput input) : SV_Target
 
 （因为是动图无法展示，自己回去网站上去看去……）
 
-![[Pasted image 20260522111723.png]]
+![[Pasted image 20260522111723.png|587]]
 
 ==❗️❗️但是❗️❗️==，这里遇到了一个很常见，会搞混的地方，那就是：
 
@@ -612,4 +623,324 @@ float4 main(PSInput input) : SV_Target
 所以要让遮罩外面成为黑色，那就用 `float4(0.0, 0.0, 0.0, 1.0)` ，这个才是黑色！
 ⚠️一定要注意，这是个很小很小的坑。
 
-## T-
+---
+## T-43 Cross（简单光照渲染）
+
+主要进入三维空间渲染了，之前都是在平面上。看看原题吧：
+
+> **原题目：**
+> mplement a shading effect on the cube object based on the cosine of the angle between the normal vector **N** of each object fragment and the direction vector **L** from the fragment to the light source, which is located at coordinates `(0.0, 1.0, 3.0)`.  
+> ![496](https://whale-app-toyuq.ondigitalocean.app/shader-learning-api/files/image/diffuse-lighting.png)
+> To calculate the fragment normal **N**, use the `dFdx` and `dFdy` functions that you learned in the previous task, along with the new `cross` function.
+> **Note:** The fragment world position is stored in the `vWorldPos` in GLSL and `input.worldPos` in HLSL.
+
+
+啥意思呢？就是给了一个无光照影响的物体，让你根据它的点光源给物体表面着色。
+
+思考逻辑上其实算是很简单的，就是通过求出物体表面每个点在空间中的法线方向，归一化乘以光照方向，这样就能得出光照强度。随后光照强度乘以物体固有颜色就能实现光照效果。
+
+但是，
+难的地方在哪里呢？
+
+难就难在你怎么去求每个点的法线。虽然你可以通过世界坐标获得每个点的位置，但是你无法方便的计算出每个点在物体表面的方向趋势，同时你还得将其转化为屏幕渲染。（当然你想强力爆破计算也行）
+
+所以这里就需要用到两个之前练习图案描边的函数：`ddx()` 和 `ddy()`。
+
+为啥呢？这就和这个有关了：
+![[T-43.jpg]]
+
+当然有关的不是指这个方体，而是指这个显示范围，因为我们要靠这个显示范围，按水平面方向去获得点在物体表面的趋势：
+![[T-43-Ex.jpeg|595]]
+
+最简单的一句话就是说：==**从屏幕空间的水平/垂直方向移动一个像素，通过观察对应的三维数据（worldPos）变化，得到物体表面的两个方向趋势。**==
+
+（上面这个是AI整理的，这个是原来自己的结论：从屏幕水平出发，水平方向（x/y）移动，通过这个方式来衡量实际在空间中每个点的走向趋势）
+
+不多说，我们直接上代码：
+```HLSL
+struct PSInput
+{
+  float4 position : SV_Position;
+  float3 worldPos : POSITION0;    // 提供了空间坐标
+};
+
+#define lightPos float3(0.0, 1.0, 3.0)
+
+float4 main(PSInput input) : SV_Target
+{
+
+  float3 dx = ddx(input.worldPos);
+  float3 dy = ddy(input.worldPos);
+
+  float3 N = normalize(cross(dx, dy));
+  float3 L = normalize(lightPos - input.worldPos);
+
+  float H = dot(N, L);
+  float3 color = float3(0.0, 0.55, 0.55);
+
+  return float4(color * H, 1.0);
+}
+```
+
+最后渲染结果的话，就和样例图片中的正方体相同啦~
+
+
+> [!NOTE] ⚠️联想
+> 既然我们注意到这里是通过 ddx/ddy 来推导物体空间变化，因此屏幕采样进度肯定会影响通过它计算出来的法线进度，进而影响光照质量。
+> 
+> **也就是屏幕采样数量越高，每个采样点就越多。**
+> **当法线越多，受到光照的影响的点就越多，效果就越明显。**
+
+---
+## T-44 if分支问题（主要是知识点）
+
+原题目的要求就只是将代码里面的`if`替换为非分支语句，例如三元表达式或者是最普通的`step`运算。
+
+先来看看原来代码：
+```hlsl
+SamplerState samplerDefault : register(s0);
+
+Texture2D iChannel0 : register(t0);  
+Texture2D iChannel1 : register(t1);
+
+struct PSInput  
+{  
+	float4 position : SV_Position;  
+	float2 uv : TEXCOORD0;  
+};
+
+float4 main(PSInput input) : SV_Target  
+{  
+	float4 result = float4(0.0, 0.0, 0.0, 0.0);
+	
+	if (input.uv.x < 0.1 || input.uv.x > 0.9) {  
+		result = iChannel0.Sample(samplerDefault, input.uv);  
+	}  
+	else if (input.uv.y < 0.1 || input.uv.y > 0.9) {  
+		result = iChannel0.Sample(samplerDefault, input.uv);  
+	}  
+	else {  
+		float textureMask = iChannel1.Sample(samplerDefault, input.uv).r;  
+		if (textureMask > 0.45) {  
+			result = iChannel0.Sample(samplerDefault, input.uv);  
+		}  
+	}
+	return result;  
+}
+```
+
+为啥绝大多数场景下不推荐用`if`呢？这个后面再解释比较好，我们先看看咋转换为`step`控制遮罩方法。上代码：
+
+```hlsl
+SamplerState samplerDefault : register(s0);
+
+Texture2D iChannel0 : register(t0);
+Texture2D iChannel1 : register(t1);
+
+struct PSInput
+{
+  float4 position : SV_Position;
+  float2 uv : TEXCOORD0;
+};
+
+float4 main(PSInput input) : SV_Target
+{
+  float4 result = float4(0.0, 0.0, 0.0, 0.0);
+
+  float xMask = max(1.0 - step(0.1, input.uv.x), step(0.9, input.uv.x));
+  float yMask = max(1.0- step(0.1, input.uv.y), step(0.9, input.uv.y));
+  float uvMask = max(xMask, yMask);
+
+  float textureMask = iChannel1.Sample(samplerDefault, input.uv).r;
+  float tMask = step(0.45, textureMask);
+
+  float mask = max(uvMask, tMask);
+
+  result = iChannel0.Sample(samplerDefault, input.uv) * mask;
+
+  return result;
+}
+```
+
+通过我们最熟知的 `step` 语句，配合 `max` 从而实现对区块的布尔叠加计算，从而实现遮罩。
+
+> 而转变成这样的核心难题在于：**if-elseif 中的不同情况如何处理？**
+
+好在这里的操作执行的都是同一个方法：`result = iChannel0.Sample(samplerDefault, input.uv)`
+
+所以就暂时不需要考虑不同情况的层次处理。（如果遇到了不同复杂操作，就需要取舍先后顺序）
+
+
+> [!NOTE] **很隐蔽的**小错误 ❗ ❗ ❗
+> 早期在使用 step 的时候，由于记忆`(edge,x)`大小比较比较混乱，于是干脆记成了：后大与前则输出1。
+> 
+> 虽然确实很方便，只需要根据需求将题中的方式写成：`max(step(input.uv.x, 0.1), step(0.9, input.uv.x))`
+> 
+> 但是！这里面的隐患这次才真正发现，**这种写法很容易在边界处理造成混乱（也不明显）**
+> 
+> 因为我们知道 edge ≤ x 的时候才等于 1，但是要是我们将变量写到前面的时候就会导致相等时边界处理反过来了。
+> 
+> 所以说，实际上虽然记可以这么记，但是写的时候还是最好别这么写，正确的写法应该是：
+> `max(1.0 - step(0.1, input.uv.x), step(0.9, input.uv.x))`
+
+为啥不建议用if的知识点的话，其实直接看官方这个就行：
+
+> [!NOTE] 全英版知识点
+> Let's explore why conditional statements can be dangerous for the GPU and when they're not.
+> ### What is a Warp?
+> A modern GPU consists of many **compute units** - called **Streaming Multiprocessors (SMs)** on NVIDIA and **Compute Units (CUs)** on AMD:
+> 
+> ![](https://whale-app-toyuq.ondigitalocean.app/shader-learning-api/files/image/branch-divergence-gpu.png)
+> 
+> Each unit can manage **hundreds or thousands of threads** simultaneously. Threads are grouped into **blocks** or **workgroups**:
+> 
+> ![](https://whale-app-toyuq.ondigitalocean.app/shader-learning-api/files/image/branch-divergence-cu.png)
+> 
+> Threads blocks are further divided into **warps** (NVIDIA) or **wavefronts** (AMD):
+> 
+> ![](https://whale-app-toyuq.ondigitalocean.app/shader-learning-api/files/image/branch-divergence-warps.png)
+> 
+> A **warp** is a group of threads (typically 32 or 64) that execute **in lockstep** on the GPU. This means all threads in a warp must follow the same instruction path at the same time. Even though each thread may operate on different data, they all follow the same control flow.
+> To maintain peak performance, **each thread in a warp should take the same amount of time** to complete its work.
+> ### Why branching can be risky
+> When threads inside a warp encounter an `if` statement like:
+> ```
+if (condition) {
+result = job_1();
+} else {
+result = job_2();
+}
+> ```
+> 
+> and `condition` evaluates differently across threads, the warp **splits**:
+> 
+> ![](https://whale-app-toyuq.ondigitalocean.app/shader-learning-api/files/image/branch-divergence-code.png)
+> 
+> The GPU must execute **both branches**. So it runs one branch while **disabling threads that don't match**, then switches and runs the other. This is called **branch divergence** and it breaks the warp's parallel efficiency.
+> ### What modern GPUs often do
+> To avoid divergence, modern GPUs may **execute both branches anyway**, then select the correct result per thread. This is called **predicated execution**. The above code might be internally transformed into:
+> `vec3 result = mix(job_1(), job_2(), float(condition));`
+> All threads run the same instruction, but **both branches are computed**.
+> ### When it becomes a problem
+> If both branches contain **heavy operations** (`texture()`, loops, expensive math), then executing both can be costly even if only one result is used.
+> ### When it is safe
+> There are exceptions where the GPU knows ahead of time which branch will be taken:
+> - the condition uses **uniforms** or **constants** that are the same across all threads;  
+> - the compiler can **statically resolve** the condition;  
+> - the warp executes **identical logic** for all fragments.
+> In these cases, the GPU can skip one branch entirely - no divergence, no overhead.
+> ### Masking vs Branching
+> Simple `if` statements and ternary operators like `condition ? a : b` do not trigger actual branching. Instead, the GPU uses **masking** to select values without interrupting the execution flow. For example:
+> ```
+> float a = (uv.x > 0.5) ? 1.0 : 0.0;
+> ```
+> This can be compiled into GPU instructions like:
+> ```
+// compares uv.x with 0.5
+cmp_gt_f32 tmp, uv.x, 0.5
+// masking
+cndmask a, 0.0, 1.0, tmp
+> ```
+> 
+> There are no jump or branch instructions. `cndmask` chooses between `0.0` and `1.0` based on `tmp`, but does not branch, all threads execute the same instruction.
+> For a deeper dive, [Inigo Quilez’s article on GPU conditionals](https://iquilezles.org/articles/gpuconditionals/) explains how ternary operators are compiled and why they don’t involve branching.
+> ### Summary
+> - `if` is not inherently bad, but **divergence inside a warp** breaks parallelism;
+> - modern GPUs often **execute both branches** to avoid warp splitting;
+> - use `mix`, `step`, or arithmetic masking for lightweight decisions;
+> - avoid branching when both paths are **computationally expensive**;
+> - uniform-based conditions are safe - the GPU knows what to do.
+> 
+
+**最简单的概括就是**：
+
+> GPU每个单元负责多任务单线计算，如果使用if就会造成单元计算器要将所有可能计算出来之后再合并。如此一来，会直接造成该单元的并行运算效率低于其他单元，从而造成合并渲染落后。
+
+
+
+## T-45、46 MIP纹理采样
+
+
+**关于第45题的话**，其实内容很简单，就是教了图片输出的MIP采样控制。
+
+先前在使用 Texture2D 资源的时候，默认情况下，GPU在采样纹理时**会自动选择合适的mipmap级别**，即： `iChannel0.Sample(samplerDefault, uv)`。
+
+他会自动选择所需的MIP级别。
+
+但是当对于高级控制，如调试、风格化效果或程序式LOD内容时，可能需要使用特殊的采样函数**手动指定MIP电平**，此时就不能用原来的这个API了，而是使用这个：
+
+`iChannel0.SampleLevel(samplerDefault, uv, mip);`
+
+这个方式直接绕过GPU的自动选择，强制其从指定的mip级别采样。
+
+
+> [!NOTE] MIP拓展知识
+> 
+> ### Mip 级别尺寸
+> 如果基础纹理是W×H，则：
+> 
+> | MIP |    尺寸     |
+> | :-: | :-------: |
+> |  0  |    W×H    |
+> |  1  | W/2 × H/2 |
+> |  2  |  W/4×H/4  |
+> |  …  |     …     |
+> |  N  |    1×1    |
+> 其中`N = floor(log2(max(W, H)))`。
+> 
+> *注：用log2比sqrt开销较小，适合用在普通显卡*
+> 
+> ### 内存使用
+> 每个等级是对上一次的记忆使用 1 / 4 的大小。所有MIP级别使用的总内存大致如下：
+> 
+> 总计=1+1/4+1/16+1/64+⋯ ≈ 4/3
+> 
+> 所以如果你的基础纹理是4MB，完整的MIP链将使用≈5.33MB。
+
+第46题的话，就比较和T-43解法接近。
+
+核心都是通过屏幕水平方向去得到空间中平面/物体表面的点的趋势方向。
+
+只不过需要额外学习的一个 MIP电平计算公式 而已：`log2(max(length(ddx), length(ddy)))`
+
+MIP电平计算本质上和前面的 ddx(worldPos) 是同一个逻辑，只不过以前是通过屏幕像素变化计算世界空间趋势（T-43），现在是通过屏幕像素变化计算纹理像素变化。UV本身是0~1的归一化坐标，通过乘TextureSize转换成真实的纹理像素坐标，然后根据一个屏幕像素覆盖多少纹理单元来决定使用哪个MIP层级。
+
+**逻辑图呢**，其实也完全可以用这个一样来解释：
+（把input.worldPos改为uv * iChannelSize0就对了）
+![[T-43-Ex.jpeg|568]]
+
+**看看代码吧**~
+```hlsl
+Texture2D iChannel0 : register(t0);
+SamplerState samplerDefault : register(s0);
+
+cbuffer Uniforms : register(b0) {
+  float2 iResolution;
+  float2 iChannelSize0;
+};
+
+struct PSInput {
+  float4 position : SV_Position;
+  float2 uv : TEXCOORD0;
+};
+
+float4 main(PSInput input) : SV_Target {
+  float2 uv = frac(input.uv * 15.0);
+
+  float2 dx = ddx(uv * iChannelSize0);
+  float2 dy = ddy(uv * iChannelSize0);
+
+  float mip = log2(max(length(dx), length(dy)));
+  
+  return iChannel0.SampleLevel(samplerDefault, uv, mip);
+}
+```
+
+这是效果图：
+![[T-46.jpg]]
+
+
+---
+
+
+![[ShaderLearningCertificate.pdf]]

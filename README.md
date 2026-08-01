@@ -1,6 +1,7 @@
 # 个人学习路线 | GameClient Engineering Notes
 
-![Status|136](https://img.shields.io/badge/status-Keeping%20Update-orange)
+![Status|136](https://img.shields.io/badge/status-Keeping%20Update-orgen)
+
 
 这是我在游戏客户端方向学习与工程实践过程中的记录。
 
@@ -92,6 +93,11 @@ Tree UI
 记录进入陌生技术领域的过程：
 - Kotlin
 - Rider Plugin开发
+
+## Shader
+
+包含：
+- shader入门
 
 
 ---
