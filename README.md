@@ -145,3 +145,7 @@ This repository is for personal learning and portfolio demonstration.
 All rights reserved.
 
 The content may be viewed for learning purposes, but redistribution, reproduction, or claiming as original work is not permitted without permission.
+
+本仓库用于个人学习和作品集展示
+©版权所有。
+内容可用于学习参考目的，但未经许可，**禁止重新分发、复制或声称其为原创作品**。
