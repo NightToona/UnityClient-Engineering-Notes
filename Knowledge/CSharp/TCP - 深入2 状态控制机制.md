@@ -217,7 +217,7 @@ stateDiagram
 	
 	ESTABLISHED --> CLOSED_WAIT : FIN的接收(ACK发送)
 	CLOSED_WAIT --> LAST_ACK : 关闭(FIN发送)
-	LAST_ACK --> "COLSED" : FIN ACK的接收
+	LAST_ACK --> COLSED : FIN ACK的接收
 ```
 
 ---
